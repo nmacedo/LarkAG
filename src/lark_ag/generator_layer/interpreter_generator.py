@@ -92,7 +92,6 @@ class InterpreterGenerator:
         dependencies = {}
 
         #Auxiliary lists to help the ordering of the dependencies
-        visit_aux = []
         full_visit_aux = []
 
         #Auxiliary list to store the inherited attributes
@@ -119,6 +118,7 @@ class InterpreterGenerator:
                     dependencies[key]['message']=semantic['message']
 
             for idx in range(0, len(attributes)):
+                #Add all referred attributes as dependencies
                 if(idx>=start_idx and attributes[idx]['value'] not in dependencies[key]['attrDependencies']):
                     dependencies[key]['attrDependencies'].append(attributes[idx]['value'])
                 
@@ -128,14 +128,11 @@ class InterpreterGenerator:
                     full_visit_aux.append(attributes[idx]['id'])
 
                 #Add the visit to the child that holds the attribute, as it depends on it
-                elif((attributes[idx]['symbol'] != ruleName or attributes[idx]['index'] > 0) and (attributes[idx]['id'] not in visit_aux and attributes[idx]['id'].split("[")[0] not in full_visit_aux) and attributes[idx]['symbol'][0].islower()):
+                elif((attributes[idx]['symbol'] != ruleName or attributes[idx]['index'] > 0) and attributes[idx]['value'] not in dependencies and attributes[idx]['symbol'][0].islower()):
                     dependencies[attributes[idx]['value']]={'expression':f"self.visit(pointers['{attributes[idx]['symbol']}'][{attributes[idx]['index']}])", 'attrDependencies':[], 'type':'visit', 'attributes':[]}
-                    visit_aux.append(attributes[idx]['id'])
-
-
         
+        #Add all synthesized attributes as dependencies of inherited
         for key, value in dependencies.items():
-
             for inherited in inheritedAux:
                 if(value['type']=='visit' and key.split('.')[0]==inherited.split('.')[0] and not(inherited in value['attrDependencies'])):
                     value['attrDependencies'].append(inherited)
@@ -148,7 +145,9 @@ class InterpreterGenerator:
 
         for attribute in order:
             if(attribute in dependencies):
-                ordered_semantics.append({'code':dependencies[attribute]['expression'], 'type':dependencies[attribute]['type'], 'attributes':dependencies[attribute]['attributes']})
+                d = {'code':dependencies[attribute]['expression'], 'type':dependencies[attribute]['type'], 'attributes':dependencies[attribute]['attributes']}
+                if d not in ordered_semantics:
+                    ordered_semantics.append(d)
                 if(dependencies[attribute]['type']=='cc'):
                     ordered_semantics[-1]['message']=dependencies[attribute]['message']
                 
