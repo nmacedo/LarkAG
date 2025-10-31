@@ -51,7 +51,7 @@ attribute: att_id ":" type
 
 nt_id: RULE
 att_id: RULE
-type: RULE ("[" type "]")?
+type: RULE ("[" type ("," type)* "]")?
 
 semantics: evaluations conditions? translations?
 
