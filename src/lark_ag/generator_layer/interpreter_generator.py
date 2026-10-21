@@ -120,6 +120,10 @@ class InterpreterGenerator:
                 key=semantic['type']+': '+semantic['code']
                 start_idx=0
 
+            #An attribute occurrence can only be defined by one equation
+            if semantic['type'] == 'er' and key in dependencies and dependencies[key]['type'] == 'er':
+                raise Exception(f"Attribute '{key}' is defined by more than one equation in rule '{ruleName}'")
+
             #If the key is not in the dependencies, add it
             if key not in dependencies:
                 dependencies[key]={'expression':semantic['code'], 'attrDependencies':[], 'type':semantic['type'], 'attributes':attributes}

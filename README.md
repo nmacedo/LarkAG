@@ -17,3 +17,19 @@ Install LarkAG using pip:
 ```bash
 pip install lark-ag
 ```
+
+## Lexing directives
+
+Whitespace is ignored by default (`%import common.WS` / `%ignore WS` are added automatically).
+If the grammar declares its own `%ignore`, that default is not added, so import and ignore whitespace explicitly if still desired.
+Directives must currently appear after the grammar rules. `%ignore`, `%import`, `%declare` and `%override` are supported and passed to Lark unchanged.
+
+## Known limitations
+
+- Rule aliases (`-> name`) are not supported. LarkAG names each alternative `rule_<index>` (e.g. `start_0`) and relies on that naming to attach semantics.
+- `%import` of a name list does not accept per-name aliases (`%import common (INT -> NUM)`); use the single-import form.
+- Attribute evaluation visits each node exactly once. Attribute grammars that need the same subtree to be visited more than once
+  (e.g. synthesize a value up, pass it back down as inherited, then synthesize a result up again) are rejected with an error,
+  even though they are valid, non-circular AGs in standard AG theory. This is a limitation of the evaluator, not of AGs.
+- Circular attribute dependencies are reported with an error naming the rule, alternative and attributes involved.
+- A child is only visited if an equation of its parent reads one of its attributes. The context conditions and translation rules of a child that is never referenced are not run.
