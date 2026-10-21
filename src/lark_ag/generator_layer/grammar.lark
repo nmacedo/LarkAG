@@ -25,7 +25,7 @@ expansions: alias (_VBAR alias)*
 
 expansions_token: alias_token (_VBAR alias_token)*
 
-alias: expansion semantics?
+alias: expansion semantics
 
 alias_token: value
 
@@ -53,7 +53,7 @@ nt_id: RULE
 att_id: RULE
 type: RULE ("[" type ("," type)* "]")?
 
-semantics: evaluations conditions? translations?
+semantics: (evaluations | conditions | translations)*
 
 evaluations: "ER" "{" (evaluation)* "}"
 evaluation: attribute_call "=" CODE_EXPR ";"
