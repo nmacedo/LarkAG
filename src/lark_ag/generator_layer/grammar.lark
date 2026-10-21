@@ -74,7 +74,7 @@ OP: /[+*]|[?](?![a-z])/
 TOKEN: /[A-Z][_A-Z0-9]*/
 RULE: /[a-z][_a-z0-9]*/
 STRING: _STRING "i"?
-REGEXP: /\/.*?[^\\]\//
+REGEXP: /\/(?!\/)(\\\/|\\\\|[^\/])*?\/[imslux]*/
 INDEX: /[1-9][0-9]*/
 _NL: /(\r?\n)+\s*/
 
