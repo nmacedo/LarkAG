@@ -112,8 +112,14 @@ class InterpreterGenerator:
                 key=attributes[0]['value']
                 start_idx=1
                 #If the LHS is not an attribute of the node, the attribute is inherited
-                if(attributes[0]['symbol'] != ruleName or attributes[0]['index'] > 0):
+                isChild = attributes[0]['symbol'] != ruleName or attributes[0]['index'] > 0
+                if(isChild):
                     inheritedAux.append(attributes[0]['value'])
+
+                #An equation defines a synthesized attribute of the node itself or an inherited attribute of a child
+                direction = self.attributes[attributes[0]['symbol']][attributes[0]['attribute']]['inheritance']
+                if direction != ('IA' if isChild else 'SA'):
+                    raise Exception(f"Equation for '{key}' in rule '{ruleName}' must not define {'a synthesized attribute of a child' if isChild else 'an inherited attribute of the node itself'}")
             
             #If the semantic is a TR or CC, the key is the whole line, prefixed so it never collides with an attribute name
             else:
