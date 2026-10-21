@@ -12,9 +12,12 @@ class AGTransformer(Transformer):
         self.semanticDict = {}
 
         self.symbolTable = {}
+        self.hasIgnore = False
 
     def start(self, tree):
-        return {'cfg': self.cfg+"\n%import common.WS\n%ignore WS\n", 'attributes': self.attributeDict, 'semantics': self.semanticDict, 'symbolTable': self.symbolTable}
+        # Whitespace is ignored by default, unless the grammar declares its own %ignore
+        cfg = self.cfg if self.hasIgnore else self.cfg + "\n%import common.WS\n%ignore WS\n"
+        return {'cfg': cfg, 'attributes': self.attributeDict, 'semantics': self.semanticDict, 'symbolTable': self.symbolTable}
     
 
     # SYNTAX
@@ -53,8 +56,42 @@ class AGTransformer(Transformer):
         self.cfg += string + '\n'
 
         return string
+
+    def ignore(self, tree):
+        self.hasIgnore = True
+        directive = '%ignore ' + ' | '.join(tree[0]['cfg'])
+        self.cfg += directive + '\n'
+        return directive
     
     
+    def import_path(self, tree):
+        return ''.join(x if isinstance(x, str) else x.value for x in tree)
+
+    def name_list(self, tree):
+        return '(' + ', '.join(tree) + ')'
+
+    def import_directive(self, tree):
+        directive = '%import ' + tree[0]
+        if tree[1] is not None:
+            directive += ' -> ' + tree[1]
+        self.cfg += directive + '\n'
+        return directive
+
+    def multi_import(self, tree):
+        directive = '%import ' + tree[0] + ' ' + tree[1]
+        self.cfg += directive + '\n'
+        return directive
+
+    def declare(self, tree):
+        directive = '%declare ' + ' '.join(tree)
+        self.cfg += directive + '\n'
+        return directive
+
+    def override_rule(self, tree):
+        # rule() already appended the definition as the last cfg line
+        self.cfg = self.cfg[:-len(tree[0]) - 1] + '%override ' + tree[0] + '\n'
+        return '%override ' + tree[0]
+
     def token_params(self, tree):
         if tree[0] == None:
             return ''

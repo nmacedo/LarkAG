@@ -13,7 +13,7 @@ token_params: ["{" TOKEN ("," TOKEN)* "}"]
 priority: "." NUMBER
 
 statement: "%ignore" expansions                    -> ignore
-         | "%import" import_path ["->" name]       -> import
+         | "%import" import_path ["->" name]       -> import_directive
          | "%import" import_path name_list         -> multi_import
          | "%override" rule                        -> override_rule
          | "%declare" name+                        -> declare
