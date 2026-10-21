@@ -66,7 +66,7 @@ translation: fun_id "(" attribute_call ("," attribute_call)* ")" ";"
 
 fun_id: RULE
 
-attribute_call: nt_id ("[" NUMBER "]")? "." att_id
+attribute_call: nt_id ("[" INDEX "]")? "." att_id
 
 
 _VBAR: "|"
@@ -75,6 +75,7 @@ TOKEN: /[A-Z][_A-Z0-9]*/
 RULE: /[a-z][_a-z0-9]*/
 STRING: _STRING "i"?
 REGEXP: /\/.*?[^\\]\//
+INDEX: /[1-9][0-9]*/
 _NL: /(\r?\n)+\s*/
 
 CODE_EXPR.-1: /.+?(?=->|;)/
