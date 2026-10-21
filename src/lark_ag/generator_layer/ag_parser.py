@@ -174,7 +174,9 @@ class AGTransformer(Transformer):
         return tree[0].value
     
     def type(self, tree):
-        return tree[0].value + '[' + tree[1] + ']' if len(tree) == 2 else tree[0].value
+        if len(tree) == 1:
+            return tree[0].value
+        return tree[0].value + '[' + ', '.join(tree[1:]) + ']'
 
     def evaluations(self, tree):
         return tree
