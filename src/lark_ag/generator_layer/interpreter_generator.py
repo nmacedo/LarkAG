@@ -106,9 +106,9 @@ class InterpreterGenerator:
                 if(attributes[0]['symbol'] != ruleName or attributes[0]['index'] > 0):
                     inheritedAux.append(attributes[0]['value'])
             
-            #If the semantic is a TR or CC, the key is the whole line
+            #If the semantic is a TR or CC, the key is the whole line, prefixed so it never collides with an attribute name
             else:
-                key=semantic['code']
+                key=semantic['type']+': '+semantic['code']
                 start_idx=0
 
             #If the key is not in the dependencies, add it
