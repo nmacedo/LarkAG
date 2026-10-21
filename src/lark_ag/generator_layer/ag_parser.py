@@ -146,29 +146,32 @@ class AGTransformer(Transformer):
         for x in tree:
             if type(x['tree'][0]) == Token:
                 symbols.append(x['tree'][0].value)
+            elif isinstance(x['tree'][0], dict):
+                symbols += x['tree'][0]['symbols']
         
         # Return the cfg of all the elements in the tree and the symbols list
         return {'cfg':' '.join([x['cfg'] for x in tree]), 'symbols':symbols}
     
     def expr(self, tree):
+        atom = tree[0]['cfg'] if isinstance(tree[0], dict) else tree[0]
         if tree[1] == None:
-            return {'cfg':tree[0], 'tree':tree}
+            return {'cfg':atom, 'tree':tree}
         elif tree[1].type == 'NUMBER':
-            string = tree[0] + '~' + tree[1].value
+            string = atom + '~' + tree[1].value
             if len(tree) == 3 and tree[2] != None:
                 string += '..' + tree[2].value
             return {'cfg':string, 'tree':tree}
         elif len(tree) == 2:
-            return {'cfg':tree[0] + tree[1].value, 'tree':tree}
+            return {'cfg':atom + tree[1].value, 'tree':tree}
         
     def atom(self, tree):
         return tree[0]
     
     def group(self, tree):
-        return '(' + tree[0] + ')'
+        return {'cfg': '(' + ' | '.join(tree[0]['cfg']) + ')', 'symbols': tree[0]['symbols']}
     
     def maybe(self, tree):
-        return '[' + tree[0] + ']'
+        return {'cfg': '[' + ' | '.join(tree[0]['cfg']) + ']', 'symbols': tree[0]['symbols']}
     
     def value(self, tree):
         return tree[0]
