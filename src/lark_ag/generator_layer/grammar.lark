@@ -1,4 +1,4 @@
-start: attributes+ _item+ //attributes -> attribute_block
+start: attributes* _item+ //attributes -> attribute_block
 
 _item: rule
      | token
@@ -25,7 +25,7 @@ expansions: alias (_VBAR alias)*
 
 expansions_token: alias_token (_VBAR alias_token)*
 
-alias: expansion semantics
+alias: expansion semantics?
 
 alias_token: value
 

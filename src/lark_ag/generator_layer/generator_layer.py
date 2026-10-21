@@ -47,4 +47,4 @@ class GeneratorLayer:
         return self.interpreter_generator.generateInterpreter()
     
     def getRootLevelAttributes(self) -> dict:
-        return self.__attributes__['start']
+        return self.__attributes__.get('start', {})

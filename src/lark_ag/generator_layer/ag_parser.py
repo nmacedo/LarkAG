@@ -88,13 +88,20 @@ class AGTransformer(Transformer):
         return self.expansions(tree)
     
     def alias(self, tree):
-        if(len(tree)==2):
-            return {'cfg':tree[0]['cfg'], 'symbols': tree[0]['symbols'], 'semantics':tree[1]}
-        else:
-            return {'cfg':tree[0], 'symbols':None, 'semantics':None}
+        if len(tree) == 2:
+            return {
+                'cfg': tree[0]['cfg'],
+                'symbols': tree[0]['symbols'],
+                'semantics': tree[1],
+            }
+        return {
+            'cfg': tree[0]['cfg'],
+            'symbols': tree[0]['symbols'],
+            'semantics': None,
+        }
         
     def alias_token(self, tree):
-        return self.alias(tree)
+        return {'cfg': tree[0], 'symbols': None, 'semantics': None}
         
     def expansion(self, tree):
         symbols = []
