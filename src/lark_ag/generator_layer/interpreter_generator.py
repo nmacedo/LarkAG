@@ -12,10 +12,15 @@ def __find_nth_occurrence__(lst, element, n):
     else:
         return -1  # Return -1 if nth occurrence doesn't exist
     
+class CircularDependencyError(Exception):
+    pass
+
+
 def topological_sort(dependencies):
     # Initialize variables
     graph = {}
     visited = set()
+    on_stack = []
     order = []
 
     # Build graph
@@ -24,11 +29,15 @@ def topological_sort(dependencies):
 
     # Helper function for DFS
     def dfs(node):
+        if node in on_stack:
+            raise CircularDependencyError(on_stack[on_stack.index(node):] + [node])
         if node in visited:
             return
-        visited.add(node)
-        for neighbor in graph.get(node, []):
+        on_stack.append(node)
+        for neighbor in sorted(graph.get(node, [])):
             dfs(neighbor)
+        on_stack.pop()
+        visited.add(node)
         order.append(node)
 
     # Perform DFS for each node
@@ -263,7 +272,12 @@ class InterpreterGenerator:
             aux.append((self.__extractAttributes__(semanticDef, ruleName), semanticDef))
 
         
-        ordered_semantics = self.__orderSemantics__(aux, ruleName)
+        try:
+            ordered_semantics = self.__orderSemantics__(aux, ruleName)
+        except CircularDependencyError as error:
+            raise CircularDependencyError(
+                f"Circular dependency in rule '{ruleName}', alternative {expansionIndex + 1}: {' -> '.join(error.args[0])} "
+                "(attributes needing a child to be visited more than once are not supported)") from None
 
         # Transform into code for ER, CC and TR
         for semanticDef in ordered_semantics:
