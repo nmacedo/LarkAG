@@ -24,12 +24,23 @@ Whitespace is ignored by default (`%import common.WS` / `%ignore WS` are added a
 If the grammar declares its own `%ignore`, that default is not added, so import and ignore whitespace explicitly if still desired.
 Directives must currently appear after the grammar rules. `%ignore`, `%import`, `%declare` and `%override` are supported and passed to Lark unchanged.
 
+## Repeated children
+
+For a symbol that can occur several times in an alternative (e.g. `cart: item*`):
+- `$item` is the number of occurrences (an `int`, `0` if there are none);
+- `@item` is the list of occurrences, usable in any Python expression, e.g. `sum([i.price for i in @item])`. All of them are evaluated first.
+- `item[n].attr` refers to the n-th occurrence (counting from 1). A bare `item` or `item.attr` is the first one.
+
 ## Known limitations
 
 - Rule aliases (`-> name`) are not supported. LarkAG names each alternative `rule_<index>` (e.g. `start_0`) and relies on that naming to attach semantics.
+- Rule and token name prefixes (`_`, `?`, `!`) are not supported. Every alternative gets a `rule_<index>` alias, which Lark rejects on `_rule`, and which makes `?rule` collapsing ineffective; attributes also need each rule to keep its own tree node.
 - `%import` of a name list does not accept per-name aliases (`%import common (INT -> NUM)`); use the single-import form.
 - Attribute evaluation visits each node exactly once. Attribute grammars that need the same subtree to be visited more than once
   (e.g. synthesize a value up, pass it back down as inherited, then synthesize a result up again) are rejected with an error,
   even though they are valid, non-circular AGs in standard AG theory. This is a limitation of the evaluator, not of AGs.
 - Circular attribute dependencies are reported with an error naming the rule, alternative and attributes involved.
 - A child is only visited if an equation of its parent reads one of its attributes. The context conditions and translation rules of a child that is never referenced are not run.
+- `$symbol` / `@symbol` include the node itself when the symbol is the rule's own symbol (e.g. `l: "x" l*`).
+- Inherited attributes of repeated children (`item*`) can only be defined for a fixed occurrence (`item[1].pos = ...`); there is no way to define them for every occurrence. Use a recursive list rule to pass context along a list.
+- Indexing a repeated child beyond the occurrences present (`item[2]` with one item, or `item[1]` with none) raises an `IndexError` naming the symbol and the missing occurrence. Use `$item` to check the count first.

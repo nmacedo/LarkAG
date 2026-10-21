@@ -94,6 +94,11 @@ class InterpreterGenerator:
 \t\t\t\tpointers[name] = []
 \t\t\tpointers[name].append(child)
 \t\treturn pointers
+
+\tdef __at__(self, pointers, symbol, index):
+\t\tif index >= len(pointers.get(symbol, [])):
+\t\t\traise IndexError(f"'{symbol}' occurrence {index} is not available: this node has only {len(pointers.get(symbol, []))} (counting from 0)")
+\t\treturn pointers[symbol][index]
 '''.replace('\t', ' '*ident)
 
     def __orderSemantics__(self, semantics, ruleName):
@@ -143,12 +148,12 @@ class InterpreterGenerator:
                 
                 #This is an access to the entire list of nodes with the same symbol ($<symbol>), so all children with this symbol need to be visited
                 if(attributes[idx]['index'] == -1 and (attributes[idx]['id'] not in full_visit_aux) and attributes[idx]['symbol'][0].islower()):
-                    dependencies[attributes[idx]['value']]={'expression':f"[self.visit(x) for x in pointers['{attributes[idx]['symbol']}']]", 'attrDependencies':[], 'type':'visit', 'attributes':[]}
+                    dependencies[attributes[idx]['value']]={'expression':f"[self.visit(x) for x in pointers.get('{attributes[idx]['symbol']}', [])]", 'attrDependencies':[], 'type':'visit', 'attributes':[]}
                     full_visit_aux.append(attributes[idx]['id'])
 
                 #Add the visit to the child that holds the attribute, as it depends on it
                 elif((attributes[idx]['symbol'] != ruleName or attributes[idx]['index'] > 0) and attributes[idx]['value'] not in dependencies and attributes[idx]['symbol'][0].islower()):
-                    dependencies[attributes[idx]['value']]={'expression':f"self.visit(pointers['{attributes[idx]['symbol']}'][{attributes[idx]['index']}])", 'attrDependencies':[], 'type':'visit', 'attributes':[]}
+                    dependencies[attributes[idx]['value']]={'expression':f"self.visit(self.__at__(pointers, '{attributes[idx]['symbol']}', {attributes[idx]['index']}))", 'attrDependencies':[], 'type':'visit', 'attributes':[]}
         
         #Add all synthesized attributes as dependencies of inherited
         for key, value in dependencies.items():
@@ -176,7 +181,7 @@ class InterpreterGenerator:
     def __extractAttributes__(self, semantics, ruleName):
         #Create a regex to find all the attributes in the code, using the symbol table
         dynamic = '|'.join(self.symbols[ruleName])
-        regex = fr'((?<!\w)({dynamic})(?!\w)(?:(?:\[(\d+)\])?\.([a-z][_a-zA-Z0-9]*))?)'
+        regex = fr'((?<![\w@$])({dynamic})(?!\w)(?:(?:\[(\d+)\])?\.([a-z][_a-zA-Z0-9]*))?)'
         pattern = re.compile(regex)
         attributes = pattern.findall(semantics['code'])
 
@@ -211,7 +216,7 @@ class InterpreterGenerator:
         dynamic = '|'.join(self.symbols[ruleName])
         regex = fr'(?<!\w)\$({dynamic})\b'
         pattern = re.compile(regex)
-        aux_string = pattern.sub(lambda x: f"len(pointers['{x.group(1)}'])", aux_string)
+        aux_string = pattern.sub(lambda x: f"len(pointers.get('{x.group(1)}', []))", aux_string)
 
         # Sort attribute values by length (longest first) to handle overlapping patterns
         attributes_sorted = sorted(semanticDef['attributes'], key=lambda x: len(x['value']), reverse=True)
@@ -226,7 +231,7 @@ class InterpreterGenerator:
                 continue
 
             # Ensure that it matches with the entire value, without trailing or leading characters
-            target = r'(?<!(@|\$|\w))' + re.escape(attribute['value']) + r'\b'
+            target = r'(?<!(@|\$|\w|\'))' + re.escape(attribute['value']) + r'\b'
 
             if attribute['symbol'] == ruleName and attribute['index'] == 0:
                 if attribute['attribute'] == '':
@@ -235,11 +240,11 @@ class InterpreterGenerator:
                     aux_string = re.sub(target, f"node.{attribute['attribute']}", aux_string)
             elif attribute['index'] != -1:
                 if attribute['attribute'] == '':
-                    aux_string = re.sub(target, f"pointers['{attribute['symbol']}'][{attribute['index']}]", aux_string)
+                    aux_string = re.sub(target, f"self.__at__(pointers, '{attribute['symbol']}', {attribute['index']})", aux_string)
                 else:
-                    aux_string = re.sub(target, f"pointers['{attribute['symbol']}'][{attribute['index']}].{attribute['attribute']}", aux_string)
+                    aux_string = re.sub(target, f"self.__at__(pointers, '{attribute['symbol']}', {attribute['index']}).{attribute['attribute']}", aux_string)
             else:
-                aux_string = re.sub(target, f"pointers['{attribute['symbol']}']", aux_string)
+                aux_string = re.sub(target, f"pointers.get('{attribute['symbol']}', [])", aux_string)
 
             # Mark this attribute value as substituted
             substituted_values.add(attribute['value'])
