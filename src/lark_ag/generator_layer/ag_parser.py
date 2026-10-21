@@ -109,13 +109,13 @@ class AGTransformer(Transformer):
     def expr(self, tree):
         if tree[1] == None:
             return {'cfg':tree[0], 'tree':tree}
+        elif tree[1].type == 'NUMBER':
+            string = tree[0] + '~' + tree[1].value
+            if len(tree) == 3 and tree[2] != None:
+                string += '..' + tree[2].value
+            return {'cfg':string, 'tree':tree}
         elif len(tree) == 2:
             return {'cfg':tree[0] + tree[1].value, 'tree':tree}
-        elif len(tree) == 3:
-            string = tree[0] + tree[1].value
-            if tree[2] != None:
-                string += tree[2].value
-            return {'cfg':string, 'tree':tree}
         
     def atom(self, tree):
         return tree[0]

@@ -65,7 +65,6 @@ class InterpreterGenerator:
     # Generates the class that will be used to calculate the attributes, being able to be run at runtime
     def generateInterpreter(self, name='MyInterpreter') -> Interpreter:
         classString=self.generateFile(name=name)
-        print(classString)
         exec(classString, globals())
         instance = globals()[name]()
         return instance
