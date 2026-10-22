@@ -99,6 +99,16 @@ class InterpreterGenerator:
 \t\tif index >= len(pointers.get(symbol, [])):
 \t\t\traise IndexError(f"'{symbol}' occurrence {index} is not available: this node has only {len(pointers.get(symbol, []))} (counting from 0)")
 \t\treturn pointers[symbol][index]
+
+\tdef visit(self, tree):
+\t\ttree._ag_visited = True
+\t\treturn super().visit(tree)
+
+\t# Children that no equation read are visited last, so that their CCs and TRs also run
+\tdef __visit_rest__(self, node):
+\t\tfor child in node.children:
+\t\t\tif isinstance(child, Tree) and not getattr(child, '_ag_visited', False):
+\t\t\t\tself.visit(child)
 '''.replace('\t', ' '*ident)
 
     def __orderSemantics__(self, semantics, ruleName):
@@ -297,6 +307,8 @@ class InterpreterGenerator:
         # Transform into code for ER, CC and TR
         for semanticDef in ordered_semantics:
             code.append(self.transformExpression(semanticDef, ruleName))
+
+        code.append("\t\tself.__visit_rest__(node)")
 
 
         return (funDef, code)

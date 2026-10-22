@@ -4,8 +4,8 @@ _item: rule
      | token
      | statement
 
-rule: RULE rule_params priority? ":" expansions
-token: TOKEN token_params priority? ":" expansions_token
+rule: RULE_DEF rule_params priority? ":" expansions
+token: TOKEN_DEF token_params priority? ":" expansions_token
 
 rule_params: ["{" RULE ("," RULE)* "}"]
 token_params: ["{" TOKEN ("," TOKEN)* "}"]
@@ -73,6 +73,9 @@ _VBAR: "|"
 OP: /[+*]|[?](?![a-z])/
 TOKEN: /[A-Z][_A-Z0-9]*/
 RULE: /[a-z][_a-z0-9]*/
+// A name followed by ":" starts a new definition, even right after a rule without semantics
+RULE_DEF.2: /[a-z][_a-z0-9]*(?=\s*(\{[^}]*\})?\s*(\.-?[0-9]+)?\s*:)/
+TOKEN_DEF.2: /[A-Z][_A-Z0-9]*(?=\s*(\{[^}]*\})?\s*(\.-?[0-9]+)?\s*:)/
 STRING: _STRING "i"?
 REGEXP: /\/(?!\/)(\\\/|\\\\|[^\/])*?\/[imslux]*/
 INDEX: /[1-9][0-9]*/
