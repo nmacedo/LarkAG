@@ -26,7 +26,7 @@ class AGTransformer(Transformer):
     def rule(self, tree):
         string=tree[0].value + tree[1]
         if len(tree) == 4:
-            string += tree[3]
+            string += tree[2]
         
         auxArray = []
         for idx, x in enumerate(tree[-1]['cfg']):
@@ -52,7 +52,7 @@ class AGTransformer(Transformer):
         string = tree[0].value + tree[1]
 
         if len(tree) == 4:
-            string += tree[3]
+            string += tree[2]
         
         string += ' : ' + " | ".join(tree[-1]['cfg'])
         self.cfg += string + '\n'
