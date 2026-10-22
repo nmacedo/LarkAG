@@ -4,6 +4,8 @@ from lark.visitors import Interpreter
 import re
 import warnings
 
+from ..errors import AGDefinitionError, CircularDependencyError
+
 
 def __find_nth_occurrence__(lst, element, n):
     indices = [index for index, value in enumerate(lst) if value == element]
@@ -12,8 +14,6 @@ def __find_nth_occurrence__(lst, element, n):
     else:
         return -1  # Return -1 if nth occurrence doesn't exist
     
-class CircularDependencyError(Exception):
-    pass
 
 
 def topological_sort(dependencies):
@@ -66,7 +66,7 @@ class InterpreterGenerator:
 
     # Generates the file that will be used to calculate the attributes, allowing the user to see the generated code
     def generateFile(self, ident=4, name="MyInterpreter") -> str:
-        string = f"from lark import Lark, Token, Tree\nfrom lark.visitors import Interpreter\n\nclass {name}(Interpreter):"
+        string = f"from lark import Lark, Token, Tree\nfrom lark.visitors import Interpreter\nfrom lark_ag.errors import ContextConditionError\n\nclass {name}(Interpreter):"
         string += self.__helper_function_string__(ident)+'\n'
         string += '\n'.join([self.generateFunctionString(function, ident) for function in self.functions])
         return string
@@ -124,7 +124,7 @@ class InterpreterGenerator:
                 #An equation defines a synthesized attribute of the node itself or an inherited attribute of a child
                 direction = self.attributes[attributes[0]['symbol']][attributes[0]['attribute']]['inheritance']
                 if direction != ('IA' if isChild else 'SA'):
-                    raise Exception(f"Equation for '{key}' in rule '{ruleName}' must not define {'a synthesized attribute of a child' if isChild else 'an inherited attribute of the node itself'}")
+                    raise AGDefinitionError(f"Equation for '{key}' in rule '{ruleName}' must not define {'a synthesized attribute of a child' if isChild else 'an inherited attribute of the node itself'}")
             
             #If the semantic is a TR or CC, the key is the whole line, prefixed so it never collides with an attribute name
             else:
@@ -133,7 +133,7 @@ class InterpreterGenerator:
 
             #An attribute occurrence can only be defined by one equation
             if semantic['type'] == 'er' and key in dependencies and dependencies[key]['type'] == 'er':
-                raise Exception(f"Attribute '{key}' is defined by more than one equation in rule '{ruleName}'")
+                raise AGDefinitionError(f"Attribute '{key}' is defined by more than one equation in rule '{ruleName}'")
 
             #If the key is not in the dependencies, add it
             if key not in dependencies:
@@ -189,7 +189,7 @@ class InterpreterGenerator:
 
         for match in attributes:
             if match[3]!='' and match[3] not in self.attributes[match[1]]:
-                raise Exception("Attribute "+match[3]+" not found in the attribute list of non-terminal "+match[1])
+                raise AGDefinitionError("Attribute "+match[3]+" not found in the attribute list of non-terminal "+match[1])
             
             elem = {'value':match[0], 'symbol':match[1], 'index':int(match[2])-1 if match[2]!='' else 0, 'attribute':match[3]}
             elem['id'] = elem['symbol'] + '[' + str(elem['index']) + ']'
@@ -251,7 +251,7 @@ class InterpreterGenerator:
 
         if semanticDef['type'] == 'cc':
             string = f"\t\tif(not({aux_string})):\n"
-            string += f"\t\t\traise Exception(\"{semanticDef['message']}\")"
+            string += f"\t\t\traise ContextConditionError(\"{semanticDef['message']}\")"
         else:
             string = f"\t\t{aux_string}"
 

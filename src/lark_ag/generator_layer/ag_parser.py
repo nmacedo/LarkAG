@@ -3,6 +3,8 @@ import json
 from lark import Lark, Token
 from lark.visitors import Transformer
 
+from ..errors import AGDefinitionError
+
 
 class AGTransformer(Transformer):
     def __init__(self):
@@ -205,7 +207,7 @@ class AGTransformer(Transformer):
                 if(attribute['name'] not in self.attributeDict[tree[1]]):
                     self.attributeDict[tree[1]].update({attribute['name']: attribute})
                 else:
-                    raise Exception(f"Attribute '{attribute['name']}' is already defined for '{tree[1]}'")
+                    raise AGDefinitionError(f"Attribute '{attribute['name']}' is already defined for '{tree[1]}'")
             else:
                 self.attributeDict[tree[1]] = {attribute['name']: attribute}
         
