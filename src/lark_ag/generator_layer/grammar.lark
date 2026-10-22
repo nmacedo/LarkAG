@@ -1,3 +1,18 @@
+// Based on the grammar published at https://larkag.epl.di.uminho.pt/grammar.
+// Differences from the published version:
+//  - start: "attributes*" instead of "attributes+", so an AG may declare no attributes
+//    (e.g. one that only uses context conditions).
+//  - rule/token: RULE_DEF and TOKEN_DEF match a name only when followed by ":" (after an
+//    optional "{params}" and ".priority"), so that a rule without ER/CC/TR can be followed
+//    by another definition instead of the next name being read as part of its body.
+//  - statement: the alias for "%import" is "import_directive" ("import" is a Python keyword
+//    and cannot be a transformer method).
+//  - type: accepts several type parameters, e.g. dict[str, int].
+//  - semantics: ER, CC and TR blocks are optional and may appear in any order.
+//  - attribute_call: the occurrence index is INDEX (1 or more) instead of NUMBER, so that
+//    x[0] and x[-1] are rejected.
+//  - REGEXP: accepts escaped slashes and flags; CODE_EXPR: may span several lines.
+
 start: attributes* _item+ //attributes -> attribute_block
 
 _item: rule
@@ -73,9 +88,8 @@ _VBAR: "|"
 OP: /[+*]|[?](?![a-z])/
 TOKEN: /[A-Z][_A-Z0-9]*/
 RULE: /[a-z][_a-z0-9]*/
-// A name followed by ":" starts a new definition, even right after a rule without semantics
-RULE_DEF.2: /[a-z][_a-z0-9]*(?=\s*(\{[^}]*\})?\s*(\.-?[0-9]+)?\s*:)/
-TOKEN_DEF.2: /[A-Z][_A-Z0-9]*(?=\s*(\{[^}]*\})?\s*(\.-?[0-9]+)?\s*:)/
+RULE_DEF: /[a-z][_a-z0-9]*(?=\s*(\{[^}]*\})?\s*(\.-?[0-9]+)?\s*:)/
+TOKEN_DEF: /[A-Z][_A-Z0-9]*(?=\s*(\{[^}]*\})?\s*(\.-?[0-9]+)?\s*:)/
 STRING: _STRING "i"?
 REGEXP: /\/(?!\/)(\\\/|\\\\|[^\/])*?\/[imslux]*/
 INDEX: /[1-9][0-9]*/
